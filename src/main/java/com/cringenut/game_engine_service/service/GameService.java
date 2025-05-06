@@ -41,6 +41,8 @@ public class GameService {
             players.add(new Player(playerIds.get(i)));
         }
 
+        // Pick random
+
         gameState.setPlayers(players); // Replace with Dto later
         gameState.setPlayerHands(playerHands);
         gameState.setDeck(gameSetup.getDeck());
