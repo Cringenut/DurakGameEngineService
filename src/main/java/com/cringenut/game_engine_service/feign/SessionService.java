@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@FeignClient("SESSION-SERVICE")
+@FeignClient("LOBBY-SERVICE")
 public interface SessionService {
-    @GetMapping("session/{sessionId}")
+    @GetMapping("lobby/{sessionId}")
     @ResponseStatus(value = HttpStatus.OK)
     public Session getSession(@PathVariable Integer sessionId);
 

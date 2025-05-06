@@ -3,13 +3,14 @@ package com.cringenut.game_engine_service.model;
 import com.cringenut.game_engine_service.enums.Suit;
 import lombok.Data;
 
+import java.util.HashMap;
 import java.util.List;
 
 @Data
 public class GameSetup {
 
     private Deck deck;
-    private List<List<Card>> playerHands;
+    private List<HashMap<Suit, List<Card>>> playerHands;
     private Suit trumpSuit;
 
     @Override

@@ -17,7 +17,7 @@ public class Card {
 
     @Override
     public String toString() {
-        return (rank + " of " + suit);
+        return (rank.getValue() + suit.getSymbol());
     }
 
 }
