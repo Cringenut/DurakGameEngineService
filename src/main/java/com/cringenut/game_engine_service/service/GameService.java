@@ -2,7 +2,7 @@ package com.cringenut.game_engine_service.service;
 
 import com.cringenut.game_engine_service.enums.Suit;
 import com.cringenut.game_engine_service.feign.DeckManagementService;
-import com.cringenut.game_engine_service.feign.SessionService;
+import com.cringenut.game_engine_service.feign.LobbyService;
 import com.cringenut.game_engine_service.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,7 @@ import java.util.Map;
 public class GameService {
 
     @Autowired
-    SessionService sessionService;
+    LobbyService lobbyService;
 
     @Autowired
     DeckManagementService deckManagementService;
@@ -24,13 +24,16 @@ public class GameService {
     public GameState createGame(Integer sessionId) {
         GameState gameState = new GameState();
 
-        Session session = sessionService.getSession(sessionId);
-        GameSetup gameSetup = deckManagementService.createGame(54, session.getPlayerIds().length);
+        // Get lobby and game setup from services
+        Lobby lobby = lobbyService.getLobby(sessionId);
+        GameSetup gameSetup = deckManagementService.createGame(54, lobby.getPlayerIds().length);
 
+        // Initialize values
         Map<Integer, HashMap<Suit, List<Card>>> playerHands = new HashMap<>();
-        List<Integer> playerIds = List.of(session.getPlayerIds());
+        List<Integer> playerIds = List.of(lobby.getPlayerIds());
         List<Player> players = new ArrayList<>();
 
+        // Get values from
         for (int i = 0; i < playerIds.size(); i++) {
             HashMap<Suit, List<Card>> playerHand =
                     gameSetup.getPlayerHands().get(i);

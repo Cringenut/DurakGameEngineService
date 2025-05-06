@@ -1,6 +1,6 @@
 package com.cringenut.game_engine_service.feign;
 
-import com.cringenut.game_engine_service.model.Session;
+import com.cringenut.game_engine_service.model.Lobby;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @FeignClient("LOBBY-SERVICE")
-public interface SessionService {
-    @GetMapping("lobby/{sessionId}")
+public interface LobbyService {
+    @GetMapping("lobby/{lobbyId}")
     @ResponseStatus(value = HttpStatus.OK)
-    public Session getSession(@PathVariable Integer sessionId);
+    public Lobby getLobby(@PathVariable Integer lobbyId);
 
 }

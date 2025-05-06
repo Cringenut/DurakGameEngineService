@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Session {
+public class Lobby {
 
     private Integer ownerId;
     private Integer[] playerIds;
