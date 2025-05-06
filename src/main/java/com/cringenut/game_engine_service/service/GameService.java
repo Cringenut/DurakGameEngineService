@@ -6,6 +6,7 @@ import com.cringenut.game_engine_service.feign.LobbyService;
 import com.cringenut.game_engine_service.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.apache.commons.math3.random.RandomDataGenerator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,12 +42,19 @@ public class GameService {
             players.add(new Player(playerIds.get(i)));
         }
 
-        // Pick random
+        // Pick random attacker
+        RandomDataGenerator generator = new RandomDataGenerator();
+        Integer attackerIndex = generator.nextInt(0, lobby.getPlayerIds().length);
+
+        // Set defender
+        Integer defenderIndex = (attackerIndex + 1) % playerIds.size();
 
         gameState.setPlayers(players); // Replace with Dto later
         gameState.setPlayerHands(playerHands);
         gameState.setDeck(gameSetup.getDeck());
         gameState.setTrumpSuit(gameSetup.getTrumpSuit());
+        gameState.setCurrentAttackerIndex(attackerIndex);
+        gameState.setCurrentDefenderIndex(defenderIndex);
 
         return gameState;
     }

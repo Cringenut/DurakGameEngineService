@@ -98,6 +98,9 @@ class GameServiceTest {
             }
         }
 
+        System.out.println("\nAttacker index: " + gameState.getCurrentAttackerIndex());
+        System.out.println("Defender index: " + gameState.getCurrentDefenderIndex());
+
         System.out.println("\nTrump Suit: " + gameState.getTrumpSuit());
         System.out.println("Deck Size: " + (gameState.getDeck() != null ? gameState.getDeck().getCards().size() : 0));
         System.out.println("Game Over: " + gameState.isGameOver());
