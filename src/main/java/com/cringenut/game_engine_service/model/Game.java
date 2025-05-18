@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 
 @Data
-public class GameSetup {
+public class Game {
 
     private Deck deck;
     private List<HashMap<Suit, List<Card>>> playerHands;
