@@ -20,6 +20,7 @@ import java.util.*;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
@@ -29,6 +30,67 @@ public class GameServiceTest {
 
     @Autowired
     private CacheManager cacheManager;
+
+    @Test
+    public void testDealCardsToPlayers_shouldDealUpToSixCardsEach() {
+        Game game = new Game();
+        Deck deck = new Deck();
+
+        // Create 20 cards in deck
+        Stack<Card> cardStack = new Stack<>();
+        for (int i = 0; i < 20; i++) {
+            cardStack.add(new Card(Rank.values()[i % Rank.values().length], Suit.HEARTS));
+        }
+        deck.setCards(cardStack);
+        game.setDeck(deck);
+
+        // Setup players
+        LinkedHashMap<Suit, ArrayList<Card>> hand1 = new LinkedHashMap<>();
+        LinkedHashMap<Suit, ArrayList<Card>> hand2 = new LinkedHashMap<>();
+        Map<Integer, LinkedHashMap<Suit, ArrayList<Card>>> playerHands = new HashMap<>();
+        playerHands.put(1, hand1);
+        playerHands.put(2, hand2);
+        game.setPlayerHands(playerHands);
+
+        GameService gameService = new GameService();
+        gameService.dealCardsToPlayers(game, 1, 2);
+
+        int totalCards1 = gameService.getTotalCardsForPlayer(game, 1);
+        int totalCards2 = gameService.getTotalCardsForPlayer(game, 2);
+
+        assertEquals(6, totalCards1, "Player 1 should have 6 cards");
+        assertEquals(6, totalCards2, "Player 2 should have 6 cards");
+    }
+
+    @Test
+    public void testApplyTurnToGame_defenseWins_noCardsReturned() {
+        // Setup game
+        Game game = new Game();
+        LinkedHashMap<Suit, ArrayList<Card>> defenseHand = new LinkedHashMap<>();
+        Map<Integer, LinkedHashMap<Suit, ArrayList<Card>>> playerHands = new HashMap<>();
+        playerHands.put(2, defenseHand);
+        game.setPlayerHands(playerHands);
+        game.setDeck(new Deck());
+
+        // Create Turn where defense defended all cards
+        Turn turn = new Turn();
+        turn.setId(1);
+        turn.setDefenseId(2);
+
+        LinkedHashMap<Card, Card> tableCards = new LinkedHashMap<>();
+        tableCards.put(new Card(Rank.TEN, Suit.CLUBS), new Card(Rank.JACK, Suit.CLUBS)); // defended
+        tableCards.put(new Card(Rank.TWO, Suit.SPADES), new Card(Rank.THREE, Suit.SPADES)); // defended
+        turn.setTableCards(tableCards);
+
+        Cache cache = cacheManager.getCache("GAME_CACHE");
+        assertThat(cache).isNotNull();
+        cache.put(1, game);
+
+        Game result = gameService.updateGame(turn);
+
+        // Defense hand should still be empty
+        assertEquals(0, result.getPlayerHands().get(2).values().stream().mapToInt(List::size).sum());
+    }
 
     @Test
     public void testPutAndGetStringFromCache() {

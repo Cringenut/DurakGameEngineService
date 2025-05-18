@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 @Data
@@ -14,25 +13,25 @@ public class Turn implements Serializable {
 
     private Integer id;
 
-    public Turn(Integer attackedId, Integer defenseId, Suit trumpSuit) {
-        this.attackedId = attackedId;
+    public Turn(Integer attackId, Integer defenseId, Suit trumpSuit) {
+        this.attackId = attackId;
         this.defenseId = defenseId;
         this.trumpSuit = trumpSuit;
     }
 
-    private Integer attackedId;
+    private Integer attackId;
     private Integer defenseId;
 
     private Suit trumpSuit;
 
-    private final LinkedHashMap<Card, Card> tableCards =
+    private LinkedHashMap<Card, Card> tableCards =
             new LinkedHashMap<>();
 
 
     @Override
     public String toString() {
         return "Turn{" +
-                "attackedId=" + attackedId +
+                "attackedId=" + attackId +
                 ", defenseId=" + defenseId +
                 ", tableCards=" + tableCards +
                 '}';

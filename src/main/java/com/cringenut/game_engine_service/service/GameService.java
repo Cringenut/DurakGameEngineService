@@ -2,6 +2,7 @@ package com.cringenut.game_engine_service.service;
 
 import com.cringenut.game_engine_service.enums.Suit;
 import com.cringenut.game_engine_service.model.Card;
+import com.cringenut.game_engine_service.model.Deck;
 import com.cringenut.game_engine_service.model.Game;
 import com.cringenut.game_engine_service.model.Turn;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,18 +19,58 @@ public class GameService {
     @Autowired
     private CacheManager cacheManager;
 
-    public void placeCardsIntoDeck(Card card, LinkedHashMap<Suit, ArrayList<Card>> hand) {
+    public void placeCardIntoPlayerDeck(Card card, LinkedHashMap<Suit, ArrayList<Card>> hand) {
         Suit suit = card.getSuit();
-
-        // Get the list for the specific suit
         ArrayList<Card> cardsOfSuit = hand.getOrDefault(suit, new ArrayList<>());
-
-        // Insert the card and sort the list by rank
         cardsOfSuit.add(card);
         cardsOfSuit.sort(Comparator.comparingInt(c -> c.getRank().ordinal()));
-
-        // Put the sorted list back in the map (optional since it's the same reference)
         hand.put(suit, cardsOfSuit);
+    }
+
+    public int getTotalCardsForPlayer(Game game, int playerId) {
+        Map<Suit, ArrayList<Card>> hand = game.getPlayerHands().get(playerId);
+        if (hand == null) return 0;
+        return hand.values().stream().mapToInt(List::size).sum();
+    }
+
+    public boolean fillHand(int cardsToFill, Deck deck, LinkedHashMap<Suit, ArrayList<Card>> hand) {
+        for (int i = 0; i < cardsToFill; i++) {
+            if (deck.getCards().isEmpty()) return false;
+            placeCardIntoPlayerDeck(deck.getCards().pop(), hand);
+        }
+        return true;
+    }
+
+    private boolean dealCardsToPlayer(Game game, int playerId, Deck deck) {
+        Map<Integer, LinkedHashMap<Suit, ArrayList<Card>>> playerHands = game.getPlayerHands();
+        LinkedHashMap<Suit, ArrayList<Card>> hand = playerHands.get(playerId);
+
+        if (hand == null) {
+            // Optionally initialize a new hand or throw exception
+            return false;
+        }
+
+        int cardsToDeal = Math.max(0, Math.min(6, 6 - getTotalCardsForPlayer(game, playerId)));
+        return fillHand(cardsToDeal, deck, hand);
+    }
+
+    public void dealCardsToPlayers(Game game, Integer attackId, Integer defendId) {
+        Deck deck = game.getDeck();
+        if (deck == null || deck.getCards().isEmpty()) return;
+
+        Set<Integer> playersToDeal = new LinkedHashSet<>();
+
+        if (attackId != null) playersToDeal.add(attackId);
+        if (defendId != null) playersToDeal.add(defendId);
+
+        // If both attacker and defender are null, deal to all
+        if (playersToDeal.isEmpty()) {
+            playersToDeal.addAll(game.getPlayerHands().keySet());
+        }
+
+        for (Integer playerId : playersToDeal) {
+            if (!dealCardsToPlayer(game, playerId, deck)) break;
+        }
     }
 
     @CachePut(value = "GAME_CACHE", key = "#result.getId()")
@@ -53,15 +94,16 @@ public class GameService {
 
             // Place all cards from table into lost hand
             for (Map.Entry<Card, Card> entry : turn.getTableCards().entrySet()) {
-                placeCardsIntoDeck(entry.getKey(), lostHand);
+                placeCardIntoPlayerDeck(entry.getKey(), lostHand);
                 // If card not defended
                 if (entry.getValue() != null)
-                    placeCardsIntoDeck(entry.getValue(), lostHand);
+                    placeCardIntoPlayerDeck(entry.getValue(), lostHand);
             }
 
             game.getPlayerHands().put(turn.getDefenseId(), lostHand);
         }
 
+        dealCardsToPlayers(game, turn.getAttackId(), turn.getDefenseId());
 
         return game;
     }
