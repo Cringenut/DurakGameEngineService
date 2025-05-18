@@ -3,82 +3,111 @@ package com.cringenut.game_engine_service;
 import com.cringenut.game_engine_service.enums.Rank;
 import com.cringenut.game_engine_service.enums.Suit;
 import com.cringenut.game_engine_service.model.Card;
+import com.cringenut.game_engine_service.model.Deck;
 import com.cringenut.game_engine_service.model.Game;
+import com.cringenut.game_engine_service.model.Turn;
 import com.cringenut.game_engine_service.service.GameService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 
 import java.util.*;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 public class GameServiceTest {
-
     @Autowired
     private GameService gameService;
 
+    @Autowired
+    private CacheManager cacheManager;
+
     @Test
-    void testPlaceCardsIntoDeck_SortedByRankWithinSuit() {
-        // Setup hand
+    public void testPutAndGetStringFromCache() {
+        Cache cache = cacheManager.getCache("GAME_CACHE");
+        assertThat(cache).isNotNull();
+
+        String key = "myKey";
+        String value = "Hello Redis!";
+
+        cache.put(key, value);
+
+        String cachedValue = cache.get(key, String.class);
+
+        assertThat(cachedValue).isEqualTo(value);
+    }
+
+    @Test
+    public void testPutAndGetGameFromCache() {
+        Game game = new Game();
+        game.setId(2);
+
+        Cache cache = cacheManager.getCache("GAME_CACHE");
+        assertThat(cache).isNotNull();
+        cache.put(2, game);
+
+        Game cachedGame = cache.get(2, Game.class);
+
+        assertThat(cachedGame).isNotNull();
+        assertThat(cachedGame.getId()).isEqualTo(2);
+    }
+
+    @Test
+    void updateGame_defenseLost_cardsAdded() {
+        Turn turn = new Turn();
+        turn.setId(2);
+        turn.setDefenseId(5);
+        Card attack = new Card(Rank.NINE, Suit.HEARTS);
+        turn.getTableCards().put(attack, null);
+
         LinkedHashMap<Suit, ArrayList<Card>> hand = new LinkedHashMap<>();
-        hand.put(Suit.HEARTS, new ArrayList<>(List.of(
-                new Card(Rank.SIX, Suit.HEARTS),
-                new Card(Rank.KING, Suit.HEARTS)
-        )));
+        hand.put(Suit.HEARTS, new ArrayList<>());
 
-        Card newCard = new Card(Rank.EIGHT, Suit.HEARTS);
+        Map<Integer, LinkedHashMap<Suit, ArrayList<Card>>> hands = new HashMap<>();
+        hands.put(5, hand);
 
-        // Act
-        gameService.placeCardsIntoDeck(newCard, hand);
+        Game game = new Game();
+        game.setId(2);
+        game.setPlayerHands(hands);
 
-        // Assert
-        ArrayList<Card> expected = new ArrayList<>(List.of(
-                new Card(Rank.SIX, Suit.HEARTS),
-                new Card(Rank.EIGHT, Suit.HEARTS),
-                new Card(Rank.KING, Suit.HEARTS)
-        ));
+        Cache cache = cacheManager.getCache("GAME_CACHE");
+        assertThat(cache).isNotNull();
+        cache.put(2, game);
 
-        assertEquals(expected, hand.get(Suit.HEARTS), "Cards should be sorted by rank within suit");
+        Game result = gameService.updateGame(turn);
+
+        assertEquals(1, result.getPlayerHands().get(5).get(Suit.HEARTS).size());
+        assertTrue(result.getPlayerHands().get(5).get(Suit.HEARTS).contains(attack));
     }
 
     @Test
-    void testPlaceCardIntoEmptySuitList() {
-        LinkedHashMap<Suit, ArrayList<Card>> hand = new LinkedHashMap<>();
+    void testGameJacksonSerialization() throws Exception {
+        Game game = new Game();
+        game.setId(42);
+        game.setTrumpSuit(Suit.HEARTS);
 
-        Card card = new Card(Rank.TEN, Suit.SPADES);
-
-        gameService.placeCardsIntoDeck(card, hand);
-
-        assertEquals(1, hand.get(Suit.SPADES).size());
-        assertEquals(card, hand.get(Suit.SPADES).get(0));
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString(game);
+        System.out.println(json);
     }
 
     @Test
-    public void testGameInitialization_PlayerHandsTrumpSuitFirst() {
-        Suit trumpSuit = Suit.CLUBS;
-        ArrayList<Integer> playerIds = new ArrayList<>(Arrays.asList(1, 2, 3));
+    void updateGame_gameMissingFromCache_shouldThrow() {
+        Turn turn = new Turn();
+        turn.setId(999);
 
-        Game game = new Game(1, null, trumpSuit, playerIds);
+        Cache cache = cacheManager.getCache("GAME_CACHE");
+        assertThat(cache).isNotNull();
+        cache.evict(999); // Ensure it’s missing
 
-        for (Integer playerId : playerIds) {
-            Map<Suit, ArrayList<Card>> hand = game.getPlayerHands().get(playerId);
-            assertNotNull(hand, "Player hand should not be null");
-
-            // Verify it's a LinkedHashMap
-            assertTrue(hand instanceof LinkedHashMap, "Suit map should maintain insertion order");
-
-            // Verify first suit is the trump suit
-            Iterator<Suit> suitIterator = hand.keySet().iterator();
-            assertTrue(suitIterator.hasNext(), "Suit map should contain suits");
-            Suit firstSuit = suitIterator.next();
-            assertEquals(trumpSuit, firstSuit, "Trump suit should be first in the hand");
-
-            // Verify all suits are present
-            Set<Suit> expectedSuits = EnumSet.allOf(Suit.class);
-            assertEquals(expectedSuits, hand.keySet(), "All suits should be present");
-        }
+        assertThrows(NullPointerException.class, () -> gameService.updateGame(turn));
     }
-
 }

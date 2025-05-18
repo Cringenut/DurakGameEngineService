@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 @Data
 @NoArgsConstructor // Needed for JSON deserialization
@@ -24,8 +25,8 @@ public class Turn implements Serializable {
 
     private Suit trumpSuit;
 
-    private final HashMap<Card, Card> tableCards =
-            new HashMap<>();
+    private final LinkedHashMap<Card, Card> tableCards =
+            new LinkedHashMap<>();
 
 
     @Override

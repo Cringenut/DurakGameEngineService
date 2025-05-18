@@ -5,6 +5,7 @@ import com.cringenut.game_engine_service.model.Card;
 import com.cringenut.game_engine_service.model.Game;
 import com.cringenut.game_engine_service.model.Turn;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Service;
@@ -33,9 +34,11 @@ public class GameService {
 
     @CachePut(value = "GAME_CACHE", key = "#result.getId()")
     public Game updateGame(Turn turn) {
-        Game game = (Game) cacheManager.getCache("GAME_CACHE")
-                .get(turn.getId());
-
+        Cache.ValueWrapper wrapper = cacheManager.getCache("GAME_CACHE").get(turn.getId());
+        if (wrapper == null) {
+            throw new NullPointerException("Game not found in cache for turn ID: " + turn.getId());
+        }
+        Game game = (Game) wrapper.get();
 
         // Check if defense lost
         Optional<Map.Entry<Card, Card>> nullValueEntry
@@ -48,9 +51,18 @@ public class GameService {
             LinkedHashMap<Suit, ArrayList<Card>> lostHand
                     = game.getPlayerHands().get(turn.getDefenseId());
 
+            // Place all cards from table into lost hand
+            for (Map.Entry<Card, Card> entry : turn.getTableCards().entrySet()) {
+                placeCardsIntoDeck(entry.getKey(), lostHand);
+                // If card not defended
+                if (entry.getValue() != null)
+                    placeCardsIntoDeck(entry.getValue(), lostHand);
+            }
 
+            game.getPlayerHands().put(turn.getDefenseId(), lostHand);
         }
 
-        return null;
+
+        return game;
     }
 }

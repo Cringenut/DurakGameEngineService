@@ -1,12 +1,19 @@
 package com.cringenut.game_engine_service.model;
 
+import com.cringenut.game_engine_service.config.CardKeyDeserializer;
+import com.cringenut.game_engine_service.config.CardKeySerializer;
 import com.cringenut.game_engine_service.enums.Suit;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.*;
 
 @Data
-public class Game {
+@NoArgsConstructor
+public class Game implements Serializable {
 
     public Game(Integer id, Deck deck, Suit trumpSuit, ArrayList<Integer> playerIds) {
         this.deck = deck;
@@ -33,7 +40,7 @@ public class Game {
     private Integer id;
 
     private Deck deck;
-    private final Map<Integer, LinkedHashMap<Suit, ArrayList<Card>>> playerHands
+    private Map<Integer, LinkedHashMap<Suit, ArrayList<Card>>> playerHands
             = new LinkedHashMap<>();
     private Suit trumpSuit;
 
