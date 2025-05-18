@@ -19,6 +19,41 @@ public class GameService {
     @Autowired
     private CacheManager cacheManager;
 
+    @CachePut(value = "GAME_CACHE", key = "#result.getId()")
+    public Game updateGame(Turn turn) {
+        Cache.ValueWrapper wrapper = cacheManager.getCache("GAME_CACHE").get(turn.getId());
+        if (wrapper == null) {
+            throw new NullPointerException("Game not found in cache for turn ID: " + turn.getId());
+        }
+        Game game = (Game) wrapper.get();
+
+        // Check if defense lost
+        Optional<Map.Entry<Card, Card>> nullValueEntry
+                = turn.getTableCards()
+                .entrySet().stream()
+                .filter(pair -> pair.getValue() == null).findFirst();
+        boolean defenseLost = nullValueEntry.isPresent();
+
+        if (defenseLost) {
+            LinkedHashMap<Suit, ArrayList<Card>> lostHand
+                    = game.getPlayerHands().get(turn.getDefenseId());
+
+            // Place all cards from table into lost hand
+            for (Map.Entry<Card, Card> entry : turn.getTableCards().entrySet()) {
+                placeCardIntoPlayerDeck(entry.getKey(), lostHand);
+                // If card not defended
+                if (entry.getValue() != null)
+                    placeCardIntoPlayerDeck(entry.getValue(), lostHand);
+            }
+
+            game.getPlayerHands().put(turn.getDefenseId(), lostHand);
+        }
+
+        dealCardsToPlayers(game, turn.getAttackId(), turn.getDefenseId());
+
+        return game;
+    }
+
     public void placeCardIntoPlayerDeck(Card card, LinkedHashMap<Suit, ArrayList<Card>> hand) {
         Suit suit = card.getSuit();
         ArrayList<Card> cardsOfSuit = hand.getOrDefault(suit, new ArrayList<>());
@@ -71,40 +106,5 @@ public class GameService {
         for (Integer playerId : playersToDeal) {
             if (!dealCardsToPlayer(game, playerId, deck)) break;
         }
-    }
-
-    @CachePut(value = "GAME_CACHE", key = "#result.getId()")
-    public Game updateGame(Turn turn) {
-        Cache.ValueWrapper wrapper = cacheManager.getCache("GAME_CACHE").get(turn.getId());
-        if (wrapper == null) {
-            throw new NullPointerException("Game not found in cache for turn ID: " + turn.getId());
-        }
-        Game game = (Game) wrapper.get();
-
-        // Check if defense lost
-        Optional<Map.Entry<Card, Card>> nullValueEntry
-                = turn.getTableCards()
-                .entrySet().stream()
-                .filter(pair -> pair.getValue() == null).findFirst();
-        boolean defenseLost = nullValueEntry.isPresent();
-
-        if (defenseLost) {
-            LinkedHashMap<Suit, ArrayList<Card>> lostHand
-                    = game.getPlayerHands().get(turn.getDefenseId());
-
-            // Place all cards from table into lost hand
-            for (Map.Entry<Card, Card> entry : turn.getTableCards().entrySet()) {
-                placeCardIntoPlayerDeck(entry.getKey(), lostHand);
-                // If card not defended
-                if (entry.getValue() != null)
-                    placeCardIntoPlayerDeck(entry.getValue(), lostHand);
-            }
-
-            game.getPlayerHands().put(turn.getDefenseId(), lostHand);
-        }
-
-        dealCardsToPlayers(game, turn.getAttackId(), turn.getDefenseId());
-
-        return game;
     }
 }

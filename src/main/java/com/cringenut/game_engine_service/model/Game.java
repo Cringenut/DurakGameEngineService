@@ -16,6 +16,7 @@ import java.util.*;
 public class Game implements Serializable {
 
     public Game(Integer id, Deck deck, Suit trumpSuit, ArrayList<Integer> playerIds) {
+        this.id = id;
         this.deck = deck;
         this.trumpSuit = trumpSuit;
 
@@ -38,11 +39,15 @@ public class Game implements Serializable {
     }
 
     private Integer id;
-
     private Deck deck;
+
     private Map<Integer, LinkedHashMap<Suit, ArrayList<Card>>> playerHands
             = new LinkedHashMap<>();
     private Suit trumpSuit;
+
+    private Integer attackId;
+    private Integer defenseId;
+
 
     @Override
     public String toString() {
