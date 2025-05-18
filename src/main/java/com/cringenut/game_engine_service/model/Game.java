@@ -3,14 +3,38 @@ package com.cringenut.game_engine_service.model;
 import com.cringenut.game_engine_service.enums.Suit;
 import lombok.Data;
 
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 @Data
 public class Game {
 
+    public Game(Integer id, Deck deck, Suit trumpSuit, ArrayList<Integer> playerIds) {
+        this.deck = deck;
+        this.trumpSuit = trumpSuit;
+
+        for (Integer playerId : playerIds) {
+            // Use LinkedHashMap to preserve insertion order (trump first)
+            LinkedHashMap<Suit, ArrayList<Card>> suitMap = new LinkedHashMap<>();
+
+            // First add trump suit
+            suitMap.put(trumpSuit, new ArrayList<>());
+
+            // Then add the rest of the suits
+            for (Suit suit : Suit.values()) {
+                if (suit != trumpSuit) {
+                    suitMap.put(suit, new ArrayList<>());
+                }
+            }
+
+            playerHands.put(playerId, suitMap);
+        }
+    }
+
+    private Integer id;
+
     private Deck deck;
-    private List<HashMap<Suit, List<Card>>> playerHands;
+    private final Map<Integer, LinkedHashMap<Suit, ArrayList<Card>>> playerHands
+            = new LinkedHashMap<>();
     private Suit trumpSuit;
 
     @Override
