@@ -38,7 +38,7 @@ public class GameServiceTest {
         for (int i = 0; i < 20; i++) {
             cards.add(new CardDTO(Rank.values()[i % Rank.values().length], Suit.HEARTS));
         }
-        deck.setCardDTOS(cards);
+        deck.setCards(cards);
         game.setDeck(deck);
 
         // Setup players

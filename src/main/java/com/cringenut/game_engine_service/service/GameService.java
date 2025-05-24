@@ -109,8 +109,59 @@ public class GameService {
         }
     }
 
-    public Game createGame(LobbyDTO lobbyDTO) {
+    public Game createGame(LobbyDTO lobby, DeckDTO initialDeck) {
+        Game game = new Game();
+        Integer id = lobby.getId();
+        Suit trumpSuit = initialDeck.getTrumpSuit();
+        Integer[] playerIds = lobby.getPlayerIds();
 
-        return null;
+        game.setId(id);
+        game.setPlayerIds(playerIds);
+        game.setDeck(initialDeck);
+        game.setTrumpSuit(trumpSuit);
+
+        for (Integer playerId : playerIds) {
+            // Use LinkedHashMap to preserve insertion order (trump first)
+            LinkedHashMap<Suit, ArrayList<CardDTO>> suitMap = new LinkedHashMap<>();
+
+            // First add trump suit
+            suitMap.put(trumpSuit, new ArrayList<>());
+
+            // Then add the rest of the suits
+            for (Suit suit : Suit.values()) {
+                if (suit != trumpSuit) {
+                    suitMap.put(suit, new ArrayList<>());
+                }
+            }
+
+            game.getPlayerHands().put(playerId, suitMap);
+        }
+
+        for (Integer playerId : lobby.getPlayerIds()) {
+            dealCardsToPlayer(game, playerId, initialDeck);
+        }
+        
+        pickAttackerAndDefender(game);
+
+        return game;
+    }
+
+    private void pickAttackerAndDefender(Game game) {
+        Integer attacker = 0;
+        Integer defender = 0;
+        
+        if (game.getAttackId() == null) {
+            Integer[] playerIds = game.getPlayerIds();
+
+            Random random = new Random();
+            int attackIndex = random.nextInt(playerIds.length);
+            attacker = playerIds[attackIndex];
+
+            int defendIndex = (attackIndex + 1) % playerIds.length;
+            defender = playerIds[defendIndex];
+        }
+        
+        game.setAttackId(attacker);
+        game.setDefenseId(defender);
     }
 }

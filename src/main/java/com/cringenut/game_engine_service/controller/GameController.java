@@ -35,7 +35,9 @@ public class GameController {
         if (initialDeck == null)
             return null;
 
-        return gameService.createGame(null);
+        Game game = gameService.createGame(lobby, initialDeck);
+
+        return game;
     }
 
     @PostMapping
