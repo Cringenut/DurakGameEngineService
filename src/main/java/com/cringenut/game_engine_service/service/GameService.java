@@ -1,5 +1,9 @@
 package com.cringenut.game_engine_service.service;
 
+import com.cringenut.game_engine_service.dto.CardDTO;
+import com.cringenut.game_engine_service.dto.DeckDTO;
+import com.cringenut.game_engine_service.dto.LobbyDTO;
+import com.cringenut.game_engine_service.dto.TurnDTO;
 import com.cringenut.game_engine_service.enums.Suit;
 import com.cringenut.game_engine_service.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,65 +21,65 @@ public class GameService {
     private CacheManager cacheManager;
 
     @CachePut(value = "GAME_CACHE", key = "#result.getId()")
-    public Game updateGame(Turn turn) {
-        Cache.ValueWrapper wrapper = cacheManager.getCache("GAME_CACHE").get(turn.getId());
+    public Game updateGame(TurnDTO turnDTO) {
+        Cache.ValueWrapper wrapper = cacheManager.getCache("GAME_CACHE").get(turnDTO.getId());
         if (wrapper == null) {
-            throw new NullPointerException("Game not found in cache for turn ID: " + turn.getId());
+            throw new NullPointerException("Game not found in cache for turn ID: " + turnDTO.getId());
         }
         Game game = (Game) wrapper.get();
 
         // Check if defense lost
-        Optional<Map.Entry<Card, Card>> nullValueEntry
-                = turn.getTableCards()
+        Optional<Map.Entry<CardDTO, CardDTO>> nullValueEntry
+                = turnDTO.getTableCards()
                 .entrySet().stream()
                 .filter(pair -> pair.getValue() == null).findFirst();
         boolean defenseLost = nullValueEntry.isPresent();
 
         if (defenseLost) {
-            LinkedHashMap<Suit, ArrayList<Card>> lostHand
-                    = game.getPlayerHands().get(turn.getDefenseId());
+            LinkedHashMap<Suit, ArrayList<CardDTO>> lostHand
+                    = game.getPlayerHands().get(turnDTO.getDefenseId());
 
             // Place all cards from table into lost hand
-            for (Map.Entry<Card, Card> entry : turn.getTableCards().entrySet()) {
+            for (Map.Entry<CardDTO, CardDTO> entry : turnDTO.getTableCards().entrySet()) {
                 placeCardIntoPlayerDeck(entry.getKey(), lostHand);
                 // If card not defended
                 if (entry.getValue() != null)
                     placeCardIntoPlayerDeck(entry.getValue(), lostHand);
             }
 
-            game.getPlayerHands().put(turn.getDefenseId(), lostHand);
+            game.getPlayerHands().put(turnDTO.getDefenseId(), lostHand);
         }
 
-        dealCardsToPlayers(game, turn.getAttackId(), turn.getDefenseId());
+        dealCardsToPlayers(game, turnDTO.getAttackId(), turnDTO.getDefenseId());
 
         return game;
     }
 
-    public void placeCardIntoPlayerDeck(Card card, LinkedHashMap<Suit, ArrayList<Card>> hand) {
-        Suit suit = card.getSuit();
-        ArrayList<Card> cardsOfSuit = hand.getOrDefault(suit, new ArrayList<>());
-        cardsOfSuit.add(card);
+    public void placeCardIntoPlayerDeck(CardDTO cardDTO, LinkedHashMap<Suit, ArrayList<CardDTO>> hand) {
+        Suit suit = cardDTO.getSuit();
+        ArrayList<CardDTO> cardsOfSuit = hand.getOrDefault(suit, new ArrayList<>());
+        cardsOfSuit.add(cardDTO);
         cardsOfSuit.sort(Comparator.comparingInt(c -> c.getRank().ordinal()));
         hand.put(suit, cardsOfSuit);
     }
 
     public int getTotalCardsForPlayer(Game game, int playerId) {
-        Map<Suit, ArrayList<Card>> hand = game.getPlayerHands().get(playerId);
+        Map<Suit, ArrayList<CardDTO>> hand = game.getPlayerHands().get(playerId);
         if (hand == null) return 0;
         return hand.values().stream().mapToInt(List::size).sum();
     }
 
-    public boolean fillHand(int cardsToFill, Deck deck, LinkedHashMap<Suit, ArrayList<Card>> hand) {
+    public boolean fillHand(int cardsToFill, DeckDTO deckDTO, LinkedHashMap<Suit, ArrayList<CardDTO>> hand) {
         for (int i = 0; i < cardsToFill; i++) {
-            if (deck.getCards().isEmpty()) return false;
-            placeCardIntoPlayerDeck(deck.getCards().pop(), hand);
+            if (deckDTO.getCardDTOS().isEmpty()) return false;
+            placeCardIntoPlayerDeck(deckDTO.getCardDTOS().pop(), hand);
         }
         return true;
     }
 
-    private boolean dealCardsToPlayer(Game game, int playerId, Deck deck) {
-        Map<Integer, LinkedHashMap<Suit, ArrayList<Card>>> playerHands = game.getPlayerHands();
-        LinkedHashMap<Suit, ArrayList<Card>> hand = playerHands.get(playerId);
+    private boolean dealCardsToPlayer(Game game, int playerId, DeckDTO deckDTO) {
+        Map<Integer, LinkedHashMap<Suit, ArrayList<CardDTO>>> playerHands = game.getPlayerHands();
+        LinkedHashMap<Suit, ArrayList<CardDTO>> hand = playerHands.get(playerId);
 
         if (hand == null) {
             // Optionally initialize a new hand or throw exception
@@ -83,12 +87,12 @@ public class GameService {
         }
 
         int cardsToDeal = Math.max(0, Math.min(6, 6 - getTotalCardsForPlayer(game, playerId)));
-        return fillHand(cardsToDeal, deck, hand);
+        return fillHand(cardsToDeal, deckDTO, hand);
     }
 
     public void dealCardsToPlayers(Game game, Integer attackId, Integer defendId) {
-        Deck deck = game.getDeck();
-        if (deck == null || deck.getCards().isEmpty()) return;
+        DeckDTO deckDTO = game.getDeck();
+        if (deckDTO == null || deckDTO.getCardDTOS().isEmpty()) return;
 
         Set<Integer> playersToDeal = new LinkedHashSet<>();
 
@@ -101,11 +105,11 @@ public class GameService {
         }
 
         for (Integer playerId : playersToDeal) {
-            if (!dealCardsToPlayer(game, playerId, deck)) break;
+            if (!dealCardsToPlayer(game, playerId, deckDTO)) break;
         }
     }
 
-    public Game createGame(Lobby lobby) {
+    public Game createGame(LobbyDTO lobbyDTO) {
 
         return null;
     }

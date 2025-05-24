@@ -1,7 +1,6 @@
 package com.cringenut.game_engine_service.config;
 
-import com.cringenut.game_engine_service.model.Card;
-import com.cringenut.game_engine_service.model.Game;
+import com.cringenut.game_engine_service.dto.CardDTO;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
@@ -11,7 +10,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 
 import java.time.Duration;
@@ -28,8 +26,8 @@ public class RedisCacheConfiguration {
                 JsonTypeInfo.As.PROPERTY
         );
         SimpleModule module = new SimpleModule();
-        module.addKeySerializer(Card.class, new CardKeySerializer());
-        module.addKeyDeserializer(Card.class, new CardKeyDeserializer());
+        module.addKeySerializer(CardDTO.class, new CardKeySerializer());
+        module.addKeyDeserializer(CardDTO.class, new CardKeyDeserializer());
         mapper.registerModule(module);
         return mapper;
     }

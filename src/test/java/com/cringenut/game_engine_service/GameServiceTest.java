@@ -2,15 +2,13 @@ package com.cringenut.game_engine_service;
 
 import com.cringenut.game_engine_service.enums.Rank;
 import com.cringenut.game_engine_service.enums.Suit;
-import com.cringenut.game_engine_service.model.Card;
-import com.cringenut.game_engine_service.model.Deck;
+import com.cringenut.game_engine_service.dto.CardDTO;
+import com.cringenut.game_engine_service.dto.DeckDTO;
 import com.cringenut.game_engine_service.model.Game;
-import com.cringenut.game_engine_service.model.Turn;
+import com.cringenut.game_engine_service.dto.TurnDTO;
 import com.cringenut.game_engine_service.service.GameService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.Cache;
@@ -21,7 +19,6 @@ import java.util.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @SpringBootTest
 public class GameServiceTest {
@@ -34,20 +31,20 @@ public class GameServiceTest {
     @Test
     public void testDealCardsToPlayers_shouldDealUpToSixCardsEach() {
         Game game = new Game();
-        Deck deck = new Deck();
+        DeckDTO deck = new DeckDTO();
 
         // Create 20 cards in deck
-        Stack<Card> cardStack = new Stack<>();
+        Stack<CardDTO> cards = new Stack<>();
         for (int i = 0; i < 20; i++) {
-            cardStack.add(new Card(Rank.values()[i % Rank.values().length], Suit.HEARTS));
+            cards.add(new CardDTO(Rank.values()[i % Rank.values().length], Suit.HEARTS));
         }
-        deck.setCards(cardStack);
+        deck.setCardDTOS(cards);
         game.setDeck(deck);
 
         // Setup players
-        LinkedHashMap<Suit, ArrayList<Card>> hand1 = new LinkedHashMap<>();
-        LinkedHashMap<Suit, ArrayList<Card>> hand2 = new LinkedHashMap<>();
-        Map<Integer, LinkedHashMap<Suit, ArrayList<Card>>> playerHands = new HashMap<>();
+        LinkedHashMap<Suit, ArrayList<CardDTO>> hand1 = new LinkedHashMap<>();
+        LinkedHashMap<Suit, ArrayList<CardDTO>> hand2 = new LinkedHashMap<>();
+        Map<Integer, LinkedHashMap<Suit, ArrayList<CardDTO>>> playerHands = new HashMap<>();
         playerHands.put(1, hand1);
         playerHands.put(2, hand2);
         game.setPlayerHands(playerHands);
@@ -66,20 +63,20 @@ public class GameServiceTest {
     public void testApplyTurnToGame_defenseWins_noCardsReturned() {
         // Setup game
         Game game = new Game();
-        LinkedHashMap<Suit, ArrayList<Card>> defenseHand = new LinkedHashMap<>();
-        Map<Integer, LinkedHashMap<Suit, ArrayList<Card>>> playerHands = new HashMap<>();
+        LinkedHashMap<Suit, ArrayList<CardDTO>> defenseHand = new LinkedHashMap<>();
+        Map<Integer, LinkedHashMap<Suit, ArrayList<CardDTO>>> playerHands = new HashMap<>();
         playerHands.put(2, defenseHand);
         game.setPlayerHands(playerHands);
-        game.setDeck(new Deck());
+        game.setDeck(new DeckDTO());
 
         // Create Turn where defense defended all cards
-        Turn turn = new Turn();
+        TurnDTO turn = new TurnDTO();
         turn.setId(1);
         turn.setDefenseId(2);
 
-        LinkedHashMap<Card, Card> tableCards = new LinkedHashMap<>();
-        tableCards.put(new Card(Rank.TEN, Suit.CLUBS), new Card(Rank.JACK, Suit.CLUBS)); // defended
-        tableCards.put(new Card(Rank.TWO, Suit.SPADES), new Card(Rank.THREE, Suit.SPADES)); // defended
+        LinkedHashMap<CardDTO, CardDTO> tableCards = new LinkedHashMap<>();
+        tableCards.put(new CardDTO(Rank.TEN, Suit.CLUBS), new CardDTO(Rank.JACK, Suit.CLUBS)); // defended
+        tableCards.put(new CardDTO(Rank.TWO, Suit.SPADES), new CardDTO(Rank.THREE, Suit.SPADES)); // defended
         turn.setTableCards(tableCards);
 
         Cache cache = cacheManager.getCache("GAME_CACHE");
@@ -124,16 +121,16 @@ public class GameServiceTest {
 
     @Test
     void updateGame_defenseLost_cardsAdded() {
-        Turn turn = new Turn();
+        TurnDTO turn = new TurnDTO();
         turn.setId(2);
         turn.setDefenseId(5);
-        Card attack = new Card(Rank.NINE, Suit.HEARTS);
+        CardDTO attack = new CardDTO(Rank.NINE, Suit.HEARTS);
         turn.getTableCards().put(attack, null);
 
-        LinkedHashMap<Suit, ArrayList<Card>> hand = new LinkedHashMap<>();
+        LinkedHashMap<Suit, ArrayList<CardDTO>> hand = new LinkedHashMap<>();
         hand.put(Suit.HEARTS, new ArrayList<>());
 
-        Map<Integer, LinkedHashMap<Suit, ArrayList<Card>>> hands = new HashMap<>();
+        Map<Integer, LinkedHashMap<Suit, ArrayList<CardDTO>>> hands = new HashMap<>();
         hands.put(5, hand);
 
         Game game = new Game();
@@ -163,7 +160,7 @@ public class GameServiceTest {
 
     @Test
     void updateGame_gameMissingFromCache_shouldThrow() {
-        Turn turn = new Turn();
+        TurnDTO turn = new TurnDTO();
         turn.setId(999);
 
         Cache cache = cacheManager.getCache("GAME_CACHE");

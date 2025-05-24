@@ -1,10 +1,8 @@
 package com.cringenut.game_engine_service.model;
 
-import com.cringenut.game_engine_service.config.CardKeyDeserializer;
-import com.cringenut.game_engine_service.config.CardKeySerializer;
+import com.cringenut.game_engine_service.dto.CardDTO;
+import com.cringenut.game_engine_service.dto.DeckDTO;
 import com.cringenut.game_engine_service.enums.Suit;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -15,14 +13,14 @@ import java.util.*;
 @NoArgsConstructor
 public class Game implements Serializable {
 
-    public Game(Integer id, Deck deck, Suit trumpSuit, ArrayList<Integer> playerIds) {
+    public Game(Integer id, DeckDTO deck, Suit trumpSuit, ArrayList<Integer> playerIds) {
         this.id = id;
         this.deck = deck;
         this.trumpSuit = trumpSuit;
 
         for (Integer playerId : playerIds) {
             // Use LinkedHashMap to preserve insertion order (trump first)
-            LinkedHashMap<Suit, ArrayList<Card>> suitMap = new LinkedHashMap<>();
+            LinkedHashMap<Suit, ArrayList<CardDTO>> suitMap = new LinkedHashMap<>();
 
             // First add trump suit
             suitMap.put(trumpSuit, new ArrayList<>());
@@ -39,9 +37,9 @@ public class Game implements Serializable {
     }
 
     private Integer id;
-    private Deck deck;
+    private DeckDTO deck;
 
-    private Map<Integer, LinkedHashMap<Suit, ArrayList<Card>>> playerHands
+    private Map<Integer, LinkedHashMap<Suit, ArrayList<CardDTO>>> playerHands
             = new LinkedHashMap<>();
     private Suit trumpSuit;
 
@@ -56,7 +54,7 @@ public class Game implements Serializable {
 
         sb.append("  \"trumpSuit\": \"").append(trumpSuit).append("\",\n");
 
-        sb.append("  \"deck\": ").append(deck != null ? deck.getCards().toString() : "null").append(",\n");
+        sb.append("  \"deck\": ").append(deck != null ? deck.getCardDTOS().toString() : "null").append(",\n");
 
         sb.append("  \"playerHands\": [\n");
         if (playerHands != null) {

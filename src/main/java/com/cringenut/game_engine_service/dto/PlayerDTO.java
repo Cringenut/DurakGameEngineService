@@ -1,13 +1,11 @@
-package com.cringenut.game_engine_service.model;
+package com.cringenut.game_engine_service.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
 @AllArgsConstructor
-public class Player {
+public class PlayerDTO {
 
     private Integer id;
 

@@ -1,4 +1,4 @@
-package com.cringenut.game_engine_service.model;
+package com.cringenut.game_engine_service.dto;
 
 import com.cringenut.game_engine_service.enums.Suit;
 import lombok.Data;
@@ -9,11 +9,11 @@ import java.util.LinkedHashMap;
 
 @Data
 @NoArgsConstructor // Needed for JSON deserialization
-public class Turn implements Serializable {
+public class TurnDTO implements Serializable {
 
     private Integer id;
 
-    public Turn(Integer attackId, Integer defenseId, Suit trumpSuit) {
+    public TurnDTO(Integer attackId, Integer defenseId, Suit trumpSuit) {
         this.attackId = attackId;
         this.defenseId = defenseId;
         this.trumpSuit = trumpSuit;
@@ -24,7 +24,7 @@ public class Turn implements Serializable {
 
     private Suit trumpSuit;
 
-    private LinkedHashMap<Card, Card> tableCards =
+    private LinkedHashMap<CardDTO, CardDTO> tableCards =
             new LinkedHashMap<>();
 
 
