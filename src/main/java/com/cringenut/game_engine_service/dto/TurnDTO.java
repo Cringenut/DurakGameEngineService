@@ -24,9 +24,9 @@ public class TurnDTO implements Serializable {
 
     private Suit trumpSuit;
 
+    // A pair of attacking card and defending card
     private LinkedHashMap<CardDTO, CardDTO> tableCards =
             new LinkedHashMap<>();
-
 
     @Override
     public String toString() {

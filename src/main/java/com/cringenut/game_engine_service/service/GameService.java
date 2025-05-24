@@ -71,8 +71,8 @@ public class GameService {
 
     public boolean fillHand(int cardsToFill, DeckDTO deckDTO, LinkedHashMap<Suit, ArrayList<CardDTO>> hand) {
         for (int i = 0; i < cardsToFill; i++) {
-            if (deckDTO.getCardDTOS().isEmpty()) return false;
-            placeCardIntoPlayerDeck(deckDTO.getCardDTOS().pop(), hand);
+            if (deckDTO.getCards().isEmpty()) return false;
+            placeCardIntoPlayerDeck(deckDTO.getCards().pop(), hand);
         }
         return true;
     }
@@ -92,7 +92,7 @@ public class GameService {
 
     public void dealCardsToPlayers(Game game, Integer attackId, Integer defendId) {
         DeckDTO deckDTO = game.getDeck();
-        if (deckDTO == null || deckDTO.getCardDTOS().isEmpty()) return;
+        if (deckDTO == null || deckDTO.getCards().isEmpty()) return;
 
         Set<Integer> playersToDeal = new LinkedHashSet<>();
 

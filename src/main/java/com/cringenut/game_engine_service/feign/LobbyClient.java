@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @FeignClient(name = "LOBBY-SERVICE", configuration = FeignConfig.class)
 public interface LobbyClient {
-    @GetMapping("/lobby/{lobbyId}")
+    @GetMapping("lobby/{lobbyId}")
     LobbyDTO getLobby(@PathVariable Integer lobbyId);
 
     @DeleteMapping("lobby/{lobbyId}")

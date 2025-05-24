@@ -8,7 +8,7 @@ import java.util.Stack;
 @Data
 public class DeckDTO {
 
-    private Stack<CardDTO> cardDTOS = new Stack<>();
+    private Stack<CardDTO> cards = new Stack<>();
     private Suit trumpSuit = Suit.SPADES;
 
 }

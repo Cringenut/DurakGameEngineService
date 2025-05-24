@@ -54,7 +54,7 @@ public class Game implements Serializable {
 
         sb.append("  \"trumpSuit\": \"").append(trumpSuit).append("\",\n");
 
-        sb.append("  \"deck\": ").append(deck != null ? deck.getCardDTOS().toString() : "null").append(",\n");
+        sb.append("  \"deck\": ").append(deck != null ? deck.getCards().toString() : "null").append(",\n");
 
         sb.append("  \"playerHands\": [\n");
         if (playerHands != null) {
