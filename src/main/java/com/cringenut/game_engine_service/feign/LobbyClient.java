@@ -1,5 +1,6 @@
 package com.cringenut.game_engine_service.feign;
 
+import com.cringenut.game_engine_service.config.FeignConfig;
 import com.cringenut.game_engine_service.model.Lobby;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.HttpStatus;
@@ -8,14 +9,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@FeignClient("LOBBY-SERVICE")
+@FeignClient(name = "LOBBY-SERVICE", configuration = FeignConfig.class)
 public interface LobbyClient {
+    @GetMapping("/lobby/{lobbyId}")
+    Lobby getLobby(@PathVariable Integer lobbyId);
 
-    @GetMapping("/{lobbyId}")
-    @ResponseStatus(value = HttpStatus.OK)
-    public Lobby getLobby(@PathVariable Integer lobbyId);
-
-    @DeleteMapping("/{lobbyId}")
+    @DeleteMapping("lobby/{lobbyId}")
     @ResponseStatus(value = HttpStatus.NO_CONTENT)
     public void deleteLobby(@PathVariable Integer lobbyId);
 

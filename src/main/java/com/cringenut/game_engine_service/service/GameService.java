@@ -1,10 +1,7 @@
 package com.cringenut.game_engine_service.service;
 
 import com.cringenut.game_engine_service.enums.Suit;
-import com.cringenut.game_engine_service.model.Card;
-import com.cringenut.game_engine_service.model.Deck;
-import com.cringenut.game_engine_service.model.Game;
-import com.cringenut.game_engine_service.model.Turn;
+import com.cringenut.game_engine_service.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -106,5 +103,10 @@ public class GameService {
         for (Integer playerId : playersToDeal) {
             if (!dealCardsToPlayer(game, playerId, deck)) break;
         }
+    }
+
+    public Game createGame(Lobby lobby) {
+
+        return null;
     }
 }

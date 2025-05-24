@@ -1,5 +1,6 @@
 package com.cringenut.game_engine_service.controller;
 
+import com.cringenut.game_engine_service.feign.LobbyClient;
 import com.cringenut.game_engine_service.model.Game;
 import com.cringenut.game_engine_service.model.Turn;
 import com.cringenut.game_engine_service.service.GameService;
@@ -14,11 +15,15 @@ public class GameController {
     @Autowired
     private GameService gameService;
 
-//    @PostMapping
-//    @RequestMapping("create/{id}")
-//    public Game createGame(@RequestBody Turn turn) {
-//        return gameService.createGame(turn);
-//    }
+    @Autowired
+    private LobbyClient lobbyClient;
+
+    @PostMapping
+    @RequestMapping("/{id}")
+    public Game createGame(@PathVariable Integer id) {
+        lobbyClient.getLobby(id);
+        return gameService.createGame(null);
+    }
 
     @PostMapping
     @RequestMapping("turn/{id}")
